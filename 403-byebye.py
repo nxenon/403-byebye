@@ -37,6 +37,10 @@ class Bypasser:
         self.cookies_dict = {}
         self.http_methods = ['GET']
         self.url = self.all_arguments.url
+        self.proxies = {
+            "http": None,
+            "https": None,
+        }
 
     def check_timeout(self):
         try:
@@ -101,6 +105,20 @@ class Bypasser:
 
         self.http_methods = methods_list
 
+    def check_proxy(self):
+        if self.all_arguments.set_proxy is None:
+            return
+        available_protocols = ['http', 'https']
+        proxy_protocol = self.all_arguments.set_proxy[0]
+        proxy_address = self.all_arguments.set_proxy[1]
+        if proxy_protocol not in available_protocols:
+            print('Invalid Proxy Protocol')
+            print(f'Available Protocols : {" ".join(available_protocols)}')
+            print('Example: --set-proxy https 127.0.0.1:8080')
+            exit()
+
+        self.proxies[proxy_protocol] = proxy_address
+
     def print_config(self):
         temp_text = f"""
         
@@ -111,6 +129,7 @@ Payloads:        {self.payloads}
 Extra Headers:   {self.headers_dict}
 Data:            {self.data_dict}
 Cookies:         {self.cookies_dict}
+Proxy:           {self.proxies}
 Using JSON:      {self.all_arguments.use_json}
 Verbose:         {self.all_arguments.verbose}
 
@@ -139,6 +158,7 @@ Verbose:         {self.all_arguments.verbose}
         self.check_datas()
         self.check_cookies()
         self.check_extra_headers()
+        self.check_proxy()
         self.print_config()
 
         self.send_requests()
@@ -159,11 +179,13 @@ def print_parser_help():
   --add-data            -ad    Add Data for Request
   --add-cookie          -ac    Add Cookie for Request
   --add-extra-header    -aeh   Add Extra Header for Request
+  --set-proxy           -sp    Set Proxy for Requests [http, https]
   --verbose             -v     Verbose Output
   --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
 
 Examples:
---url https://www.example.com/admin --timeout 2.0 --methods GET
+--url https://www.example.com/admin
+--url https://www.example.com/admin --timeout 2.0 --methods GET --set-proxy https 127.0.0.1:8080
 --url https://www.example.com/admin --add-payload 127.0.0.1 --add-payload localhost
 --url https://www.example.com/admin --methods "GET,POST" --use-json --verbose
 --url https://www.example.com/admin --add-data key1 value1 --add-data key2 value2
@@ -186,6 +208,7 @@ def start_parser():
     parser.add_argument('--add-data', '-ad', action='append', nargs=2)
     parser.add_argument('--add-cookie', '-ac', action='append', nargs=2)
     parser.add_argument('--add-extra-header', '-aeh', action='append', nargs=2)
+    parser.add_argument('--set-proxy', '-sp', nargs=2)
     parser.add_argument('--verbose', '-v', default=False, action='store_true')
     parser.add_argument('--timeout', '-t', default=3.0)
 
