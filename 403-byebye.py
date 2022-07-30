@@ -42,11 +42,22 @@ class Bypasser:
             "https": None,
         }
 
+    def log(self, text, text_type='normal'):
+        """
+        Print Function
+        :return:
+        """
+        if text_type == 'verbose':
+            if self.all_arguments.verbose:
+                print(text)
+        else:
+            print(text)
+
     def check_timeout(self):
         try:
             self.timeout = float(self.all_arguments.timeout)
         except ValueError:
-            print('timeout must be integer e.g 3.0')
+            self.log('timeout must be integer e.g 3.0')
             exit(1)
 
     def check_bypass_values(self):
@@ -99,8 +110,8 @@ class Bypasser:
         methods_list = list(map(lambda x: x.strip().upper(), methods_list))
         for m in methods_list:
             if m not in available_methods:
-                print(f'Invalid HTTP Method : {m}')
-                print(f'Available Verbs: {" ".join(available_methods)}')
+                self.log(f'Invalid HTTP Method : {m}')
+                self.log(f'Available Verbs: {" ".join(available_methods)}')
                 exit(1)
 
         self.http_methods = methods_list
@@ -112,12 +123,15 @@ class Bypasser:
         proxy_protocol = self.all_arguments.set_proxy[0]
         proxy_address = self.all_arguments.set_proxy[1]
         if proxy_protocol not in available_protocols:
-            print('Invalid Proxy Protocol')
-            print(f'Available Protocols : {" ".join(available_protocols)}')
-            print('Example: --set-proxy https 127.0.0.1:8080')
-            exit()
+            self.log('Invalid Proxy Protocol')
+            self.log(f'Available Protocols : {" ".join(available_protocols)}')
+            self.log('Example: --set-proxy https 127.0.0.1:8080')
+            exit(1)
 
         self.proxies[proxy_protocol] = proxy_address
+
+        if (self.proxies['http'] is not None) or (self.proxies['https'] is not None):
+            self.timeout = None
 
     def print_config(self):
         temp_text = f"""
@@ -130,10 +144,11 @@ Extra Headers:   {self.headers_dict}
 Data:            {self.data_dict}
 Cookies:         {self.cookies_dict}
 Proxy:           {self.proxies}
+Timeout:         {self.timeout}
 Using JSON:      {self.all_arguments.use_json}
 Verbose:         {self.all_arguments.verbose}
-
 +--######################################################--+
+
         """
 
         print(temp_text)
@@ -146,10 +161,54 @@ Verbose:         {self.all_arguments.verbose}
             self.send_post_requests()
 
     def send_get_requests(self):
-        pass
+        for bypass_header in self.bypass_headers:
+            for payload in self.payloads:
+                try:
+                    req = requests.get(url=self.url, params=self.data_dict, timeout=self.timeout, verify=False,
+                                       headers=self.headers_dict, cookies=self.cookies_dict, proxies=self.proxies)
+
+                except Exception as e:
+                    self.log(text='[--BEGIN--]')
+                    self.log(text=f'Error in GET Request')
+                    self.log(text=f'Error Message: {e}')
+                    self.log(text='[--END--]')
+
+                else:
+                    self.log('++---------------------------------------++')
+                    self.log(f'Payload --> {bypass_header}: {payload}')
+                    self.log(
+                        f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    self.log('++---------------------------------------++')
 
     def send_post_requests(self):
-        pass
+        for bypass_header in self.bypass_headers:
+            for payload in self.payloads:
+                try:
+                    if self.data_dict:
+                        if self.all_arguments.use_json:
+                            req = requests.post(url=self.url, json=self.data_dict, timeout=self.timeout, verify=False,
+                                                headers=self.headers_dict, cookies=self.cookies_dict,
+                                                proxies=self.proxies)
+                        else:
+                            req = requests.post(url=self.url, data=self.data_dict, timeout=self.timeout, verify=False,
+                                                headers=self.headers_dict, cookies=self.cookies_dict,
+                                                proxies=self.proxies)
+                    else:
+                        req = requests.post(url=self.url, headers=self.headers_dict, timeout=self.timeout, verify=False,
+                                            cookies=self.cookies_dict, proxies=self.proxies)
+
+                except Exception as e:
+                    self.log(text='[--BEGIN--]')
+                    self.log(text=f'Error in POST Request')
+                    self.log(text=f'Error Message: {e}')
+                    self.log(text='[--END--]')
+
+                else:
+                    self.log('++---------------------------------------++')
+                    self.log(f'Payload --> {bypass_header}: {payload}')
+                    self.log(
+                        f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    self.log('++---------------------------------------++')
 
     def start(self):
         self.check_timeout()
@@ -179,7 +238,7 @@ def print_parser_help():
   --add-data            -ad    Add Data for Request
   --add-cookie          -ac    Add Cookie for Request
   --add-extra-header    -aeh   Add Extra Header for Request
-  --set-proxy           -sp    Set Proxy for Requests [http, https]
+  --set-proxy           -sp    Set Proxy for Requests [http, https](when proxy is set timeout sets to None)
   --verbose             -v     Verbose Output
   --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
 
