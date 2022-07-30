@@ -2,6 +2,14 @@
 403-ByeBye
 Bypass 403 Forbidden Error
 https://github.com/nxenon/403-byebye
+  _  _    ___ ____    ____             ____
+ | || |  / _ \___ \  |  _ \           |  _ \
+ | || |_| | | |__) | | |_) |_   _  ___| |_) |_   _  ___
+ |__   _| | | |__ <  |  _ <| | | |/ _ \  _ <| | | |/ _ \
+    | | | |_| |__) | | |_) | |_| |  __/ |_) | |_| |  __/
+    |_|  \___/____/  |____/ \__, |\___|____/ \__, |\___|
+                             __/ |            __/ |
+                            |___/            |___/
 """
 
 import requests
@@ -10,6 +18,22 @@ from argparse import ArgumentParser
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import colorama
+
+
+def print_banner():
+    VERSION = 'Beta'
+    banner_text = f'''
+  _  _    ___ ____    ____             ____             
+ | || |  / _ \___ \  |  _ \           |  _ \  Version: {VERSION}
+ | || |_| | | |__) | | |_) |_   _  ___| |_) |_   _  ___ 
+ |__   _| | | |__ <  |  _ <| | | |/ _ \  _ <| | | |/ _ \\
+    | | | |_| |__) | | |_) | |_| |  __/ |_) | |_| |  __/
+    |_|  \___/____/  |____/ \__, |\___|____/ \__, |\___|
+                             __/ |            __/ |     
+                            |___/            |___/      
+    '''
+
+    print(banner_text)
 
 
 class Bypasser:
@@ -318,4 +342,5 @@ def start_parser():
 
 
 if __name__ == '__main__':
+    print_banner()
     start_parser()
