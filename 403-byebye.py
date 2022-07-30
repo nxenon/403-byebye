@@ -9,6 +9,7 @@ from argparse import ArgumentParser
 # disable certificate warning
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import colorama
 
 
 class Bypasser:
@@ -41,6 +42,7 @@ class Bypasser:
             "http": None,
             "https": None,
         }
+        self.is_colorful = not self.all_arguments.no_color
 
     def log(self, text, text_type='normal'):
         """
@@ -176,8 +178,21 @@ Verbose:         {self.all_arguments.verbose}
                 else:
                     self.log('++---------------------------------------++')
                     self.log(f'Payload --> {bypass_header}: {payload}')
-                    self.log(
-                        f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    if not self.is_colorful:
+                        self.log(
+                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    else:
+                        if req.status_code == 200:
+                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
+
+                        elif req.status_code == 403:
+                            text = req.status_code
+
+                        else:
+                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
+
+                        self.log(
+                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
                     self.log('++---------------------------------------++')
 
     def send_post_requests(self):
@@ -206,8 +221,21 @@ Verbose:         {self.all_arguments.verbose}
                 else:
                     self.log('++---------------------------------------++')
                     self.log(f'Payload --> {bypass_header}: {payload}')
-                    self.log(
-                        f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    if not self.is_colorful:
+                        self.log(
+                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
+                    else:
+                        if req.status_code == 200:
+                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
+
+                        elif req.status_code == 403:
+                            text = req.status_code
+
+                        else:
+                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
+
+                        self.log(
+                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
                     self.log('++---------------------------------------++')
 
     def start(self):
@@ -241,6 +269,7 @@ def print_parser_help():
   --set-proxy           -sp    Set Proxy for Requests [http, https](when proxy is set timeout sets to None)
   --verbose             -v     Verbose Output
   --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
+  --no-color            -nc    Print Output Without Color
 
 Examples:
 --url https://www.example.com/admin
@@ -270,6 +299,7 @@ def start_parser():
     parser.add_argument('--set-proxy', '-sp', nargs=2)
     parser.add_argument('--verbose', '-v', default=False, action='store_true')
     parser.add_argument('--timeout', '-t', default=3.0)
+    parser.add_argument('--no-color', '-nc', default=False, action='store_true')
 
     args, unknown = parser.parse_known_args()
     if (args.script_help is not None) and (args.script_help is True):
