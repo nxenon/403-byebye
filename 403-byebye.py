@@ -1,5 +1,5 @@
 """
-403-ByeBye
+403-ByeBye v1.0.0
 Bypass 403 Forbidden Error
 https://github.com/nxenon/403-byebye
   _  _    ___ ____    ____             ____
@@ -18,10 +18,10 @@ from argparse import ArgumentParser
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import colorama
+VERSION = 'v1.0.0'
 
 
 def print_banner():
-    VERSION = 'Beta'
     banner_text = f'''
   _  _    ___ ____    ____             ____             
  | || |  / _ \___ \  |  _ \           |  _ \  Version: {VERSION}
