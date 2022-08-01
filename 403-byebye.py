@@ -294,23 +294,29 @@ def print_parser_help():
   --verbose             -v     Verbose Output
   --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
   --no-color            -nc    Print Output Without Color
-
-Examples:
---url https://www.example.com/admin
---url https://www.example.com/admin --timeout 2.0 --methods GET --set-proxy https 127.0.0.1:8080
---url https://www.example.com/admin --add-payload 127.0.0.1 --add-payload localhost
---url https://www.example.com/admin --methods "GET,POST" --use-json --verbose
---url https://www.example.com/admin --add-data key1 value1 --add-data key2 value2
---url https://www.example.com/admin --add-cookie cookieName1 value1 --add-cookie cookieName2 value2
---url https://www.example.com/admin --add-extra-header headerName test --add-extra-header headerName2 test2
+  --show-examples       -se    Show some Examples for Using this Tool
         '''
 
     print(help_text)
 
 
+def show_examples(prog_name):
+    examples_text = f'''Examples:
+python3 {prog_name} --url https://www.abc.com/admin
+python3 {prog_name} --url https://www.abc.com/admin --timeout 2.0 --methods GET --set-proxy https 127.0.0.1:8080
+python3 {prog_name} --url https://www.abc.com/admin --add-payload 127.0.0.1 --add-payload localhost
+python3 {prog_name} --url https://www.abc.com/admin --methods "GET,POST" --use-json --verbose
+python3 {prog_name} --url https://www.abc.com/admin --add-data key1 value1 --add-data key2 value2
+python3 {prog_name} --url https://www.abc.com/admin --add-cookie cookieName1 value1 --add-cookie cookieName2 value2
+python3 {prog_name} --url https://www.abc.com/admin --add-extra-header headerName test --add-extra-header headerName2 test2
+'''
+
+    print(examples_text)
+
+
 def start_parser():
     parser = ArgumentParser(
-        usage='python3 403-byebye.py --script-help [for help]',
+        usage='python3 %(prog)s --script-help',
         allow_abbrev=False, add_help=False)
     parser.add_argument('--script-help', '-sh', action='store_true')
     parser.add_argument('--url', '-u')
@@ -324,8 +330,13 @@ def start_parser():
     parser.add_argument('--verbose', '-v', default=False, action='store_true')
     parser.add_argument('--timeout', '-t', default=3.0)
     parser.add_argument('--no-color', '-nc', default=False, action='store_true')
+    parser.add_argument('--show-examples', '-se', default=False, action='store_true')
 
     args, unknown = parser.parse_known_args()
+    if args.show_examples:
+        show_examples(prog_name=parser.prog)
+        exit()
+
     if (args.script_help is not None) and (args.script_help is True):
         print_parser_help()
         exit()
@@ -335,9 +346,9 @@ def start_parser():
         bypasser.start()
 
     else:
-        print('You have to set target!')
-        print('--url')
         parser.print_usage()
+        print()
+        print('You have to set target ! --> --url')
         exit()
 
 

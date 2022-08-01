@@ -9,7 +9,8 @@ Hope to Bypass 403 Forbidden Errors :)
  - I'll be glad if you wanna contribute
 
 # Usage
-    python3 403-byebye.py --url https://wwww.example.com
+    python3 403-byebye.py --show-examples
+    python3 403-byebye.py --url https://www.example.com/a/page/which/has/403/error
 
 # Installation
     git clone https://github.com/nxenon/403-byebye.git
@@ -40,12 +41,4 @@ Hope to Bypass 403 Forbidden Errors :)
       --verbose             -v     Verbose Output
       --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
       --no-color            -nc    Print Output Without Color
-    
-    Examples:
-    --url https://www.example.com/admin
-    --url https://www.example.com/admin --timeout 2.0 --methods GET --set-proxy https 127.0.0.1:8080
-    --url https://www.example.com/admin --add-payload 127.0.0.1 --add-payload localhost
-    --url https://www.example.com/admin --methods "GET,POST" --use-json --verbose
-    --url https://www.example.com/admin --add-data key1 value1 --add-data key2 value2
-    --url https://www.example.com/admin --add-cookie cookieName1 value1 --add-cookie cookieName2 value2
-    --url https://www.example.com/admin --add-extra-header headerName test --add-extra-header headerName2 test2
+      --show-examples       -se    Show some Examples for Using this Tool
