@@ -11,6 +11,12 @@ Hope to Bypass 403 Forbidden Errors :)
 # Usage
     python3 403-byebye.py --url https://wwww.example.com
 
+# Installation
+    git clone git@github.com:nxenon/403-byebye.git
+    cd 403-byebye
+    pip install -r requirements.txt
+    python3 403-byebye.py --script-help
+
 # Help
      nxenon@nxenon:~$ python3 403-byebye.py --script-help
       _  _    ___ ____    ____             ____
