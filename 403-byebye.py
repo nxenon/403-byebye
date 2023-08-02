@@ -20,7 +20,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import colorama
 VERSION = 'v1.0.0'
 
-
 def print_banner():
     banner_text = f'''
   _  _    ___ ____    ____             ____             
@@ -190,34 +189,15 @@ Verbose:         {self.all_arguments.verbose}
         for bypass_header in self.bypass_headers:
             for payload in self.payloads:
                 try:
-                    req = requests.get(url=self.url, params=self.data_dict, timeout=self.timeout, verify=False,
+                    resp = requests.get(url=self.url, params=self.data_dict, timeout=self.timeout, verify=False,
                                        headers=self.headers_dict, cookies=self.cookies_dict, proxies=self.proxies)
 
                 except Exception as e:
-                    self.log(text='[--BEGIN--]')
-                    self.log(text=f'Error in GET Request')
-                    self.log(text=f'Error Message: {e}')
-                    self.log(text='[--END--]')
-
+                    self.log_exception(e)
                 else:
-                    self.log('++---------------------------------------++')
-                    self.log(f'Payload --> {bypass_header}: {payload}')
-                    if not self.is_colorful:
-                        self.log(
-                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
-                    else:
-                        if req.status_code == 200:
-                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
+                    self.log_result(payload=f"{bypass_header}: {payload}", response=resp)
 
-                        elif req.status_code == 403:
-                            text = req.status_code
 
-                        else:
-                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
-
-                        self.log(
-                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
-                    self.log('++---------------------------------------++')
 
     def send_post_requests(self):
         for bypass_header in self.bypass_headers:
@@ -225,42 +205,64 @@ Verbose:         {self.all_arguments.verbose}
                 try:
                     if self.data_dict:
                         if self.all_arguments.use_json:
-                            req = requests.post(url=self.url, json=self.data_dict, timeout=self.timeout, verify=False,
+                            resp = requests.post(url=self.url, json=self.data_dict, timeout=self.timeout, verify=False,
                                                 headers=self.headers_dict, cookies=self.cookies_dict,
                                                 proxies=self.proxies)
                         else:
-                            req = requests.post(url=self.url, data=self.data_dict, timeout=self.timeout, verify=False,
+                            resp = requests.post(url=self.url, data=self.data_dict, timeout=self.timeout, verify=False,
                                                 headers=self.headers_dict, cookies=self.cookies_dict,
                                                 proxies=self.proxies)
                     else:
-                        req = requests.post(url=self.url, headers=self.headers_dict, timeout=self.timeout, verify=False,
+                        resp = requests.post(url=self.url, headers=self.headers_dict, timeout=self.timeout, verify=False,
                                             cookies=self.cookies_dict, proxies=self.proxies)
 
                 except Exception as e:
-                    self.log(text='[--BEGIN--]')
-                    self.log(text=f'Error in POST Request')
-                    self.log(text=f'Error Message: {e}')
-                    self.log(text='[--END--]')
+                    self.log_exception(e)
 
                 else:
-                    self.log('++---------------------------------------++')
-                    self.log(f'Payload --> {bypass_header}: {payload}')
-                    if not self.is_colorful:
-                        self.log(
-                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
-                    else:
-                        if req.status_code == 200:
-                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
+                    self.log_result(payload=f"{bypass_header}: {payload}", response=resp)
 
-                        elif req.status_code == 403:
-                            text = req.status_code
+    def check_paths(self):
+        with open("paths.txt", "r") as paths:
+            available_paths = paths.read().splitlines()
 
-                        else:
-                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
+        url, to_bypass = self.url.rsplit('/', 1)
+        for path in available_paths:
+            payload = path.format(slug=to_bypass)
+            try:
+                resp = requests.get(url=url + payload, params=self.data_dict, timeout=self.timeout, verify=False,
+                                    headers=self.headers_dict, cookies=self.cookies_dict, proxies=self.proxies)
 
-                        self.log(
-                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
-                    self.log('++---------------------------------------++')
+            except Exception as e:
+                self.log_exception(e)
+            else:
+                self.log_result(payload=f"{payload}", response=resp)
+
+    def log_exception(self, exc):
+        self.log(text='[--BEGIN--]')
+        self.log(text=f'Error in GET Request')
+        self.log(text=f'Error Message: {exc}')
+        self.log(text='[--END--]')
+
+    def log_result(self, payload, response):
+        self.log('++---------------------------------------++')
+        self.log(f'Payload --> {payload}')
+        if not self.is_colorful:
+            self.log(
+                f'[{response.request.method}]     Response Length: [{str(len(response.content))}] Status Code: [{str(response.status_code)}]')
+        else:
+            if response.status_code == 200:
+                text = colorama.Fore.GREEN + str(response.status_code) + colorama.Fore.RESET
+
+            elif response.status_code == 403:
+                text = response.status_code
+
+            else:
+                text = colorama.Fore.CYAN + str(response.status_code) + colorama.Fore.RESET
+
+            self.log(
+                f'[{response.request.method}]     Response Length: [{str(len(response.content))}] Status Code: [{text}]')
+        self.log('++---------------------------------------++')
 
     def start(self):
         self.check_timeout()
@@ -273,6 +275,7 @@ Verbose:         {self.all_arguments.verbose}
         self.print_config()
 
         self.send_requests()
+        self.check_paths()
 
     def run_extra_bypasses(self):
         """
