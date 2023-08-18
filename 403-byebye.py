@@ -13,6 +13,7 @@ https://github.com/nxenon/403-byebye
 """
 
 import requests
+from requests import Request, Session
 from argparse import ArgumentParser
 # disable certificate warning
 import urllib3
@@ -223,6 +224,7 @@ Verbose:         {self.all_arguments.verbose}
                     self.log_result(payload=f"{bypass_header}: {payload}", response=resp)
 
     def check_paths(self):
+        s = Session()
         with open("paths.txt", "r") as paths:
             available_paths = paths.read().splitlines()
 
@@ -230,9 +232,13 @@ Verbose:         {self.all_arguments.verbose}
         for path in available_paths:
             payload = path.format(slug=to_bypass)
             try:
-                resp = requests.get(url=url + payload, params=self.data_dict, timeout=self.timeout, verify=False,
-                                    headers=self.headers_dict, cookies=self.cookies_dict, proxies=self.proxies)
-
+                _url = url+payload
+                req = Request(
+                    "GET", url=_url, params=self.data_dict, headers=self.headers_dict, cookies=self.cookies_dict
+                )
+                prep = req.prepare()
+                prep.url = _url
+                resp = s.send(prep,  proxies=self.proxies)
             except Exception as e:
                 self.log_exception(e)
             else:
