@@ -16,9 +16,11 @@ import requests
 from argparse import ArgumentParser
 # disable certificate warning
 import urllib3
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import colorama
-VERSION = 'v1.0.0'
+
+VERSION = 'v1.1.0'
 
 
 def print_banner():
@@ -189,78 +191,68 @@ Verbose:         {self.all_arguments.verbose}
     def send_get_requests(self):
         for bypass_header in self.bypass_headers:
             for payload in self.payloads:
+                _temp_all_dict = self.headers_dict.copy()
+                _temp_all_dict[bypass_header] = payload
                 try:
-                    req = requests.get(url=self.url, params=self.data_dict, timeout=self.timeout, verify=False,
-                                       headers=self.headers_dict, cookies=self.cookies_dict, proxies=self.proxies)
+                    resp = requests.get(url=self.url, params=self.data_dict, timeout=self.timeout, verify=False,
+                                        headers=_temp_all_dict, cookies=self.cookies_dict, proxies=self.proxies)
 
                 except Exception as e:
-                    self.log(text='[--BEGIN--]')
-                    self.log(text=f'Error in GET Request')
-                    self.log(text=f'Error Message: {e}')
-                    self.log(text='[--END--]')
+                    self.log_exception(e, "GET")
 
                 else:
-                    self.log('++---------------------------------------++')
-                    self.log(f'Payload --> {bypass_header}: {payload}')
-                    if not self.is_colorful:
-                        self.log(
-                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
-                    else:
-                        if req.status_code == 200:
-                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
-
-                        elif req.status_code == 403:
-                            text = req.status_code
-
-                        else:
-                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
-
-                        self.log(
-                            f'[GET]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
-                    self.log('++---------------------------------------++')
+                    self.log_result(bypass_header=bypass_header, payload=payload, resp=resp, method='GET')
 
     def send_post_requests(self):
         for bypass_header in self.bypass_headers:
             for payload in self.payloads:
+                _temp_all_dict = self.headers_dict.copy()
+                _temp_all_dict[bypass_header] = payload
                 try:
                     if self.data_dict:
                         if self.all_arguments.use_json:
-                            req = requests.post(url=self.url, json=self.data_dict, timeout=self.timeout, verify=False,
-                                                headers=self.headers_dict, cookies=self.cookies_dict,
-                                                proxies=self.proxies)
+                            resp = requests.post(url=self.url, json=self.data_dict, timeout=self.timeout, verify=False,
+                                                 headers=_temp_all_dict, cookies=self.cookies_dict,
+                                                 proxies=self.proxies)
                         else:
-                            req = requests.post(url=self.url, data=self.data_dict, timeout=self.timeout, verify=False,
-                                                headers=self.headers_dict, cookies=self.cookies_dict,
-                                                proxies=self.proxies)
+                            resp = requests.post(url=self.url, data=self.data_dict, timeout=self.timeout, verify=False,
+                                                 headers=_temp_all_dict, cookies=self.cookies_dict,
+                                                 proxies=self.proxies)
                     else:
-                        req = requests.post(url=self.url, headers=self.headers_dict, timeout=self.timeout, verify=False,
-                                            cookies=self.cookies_dict, proxies=self.proxies)
+                        resp = requests.post(url=self.url, headers=_temp_all_dict, timeout=self.timeout, verify=False,
+                                             cookies=self.cookies_dict, proxies=self.proxies)
 
                 except Exception as e:
-                    self.log(text='[--BEGIN--]')
-                    self.log(text=f'Error in POST Request')
-                    self.log(text=f'Error Message: {e}')
-                    self.log(text='[--END--]')
+                    self.log_exception(e, 'POST')
 
                 else:
-                    self.log('++---------------------------------------++')
-                    self.log(f'Payload --> {bypass_header}: {payload}')
-                    if not self.is_colorful:
-                        self.log(
-                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{str(req.status_code)}]')
-                    else:
-                        if req.status_code == 200:
-                            text = colorama.Fore.GREEN + str(req.status_code) + colorama.Fore.RESET
+                    self.log_result(bypass_header=bypass_header, payload=payload, resp=resp, method='POST')
 
-                        elif req.status_code == 403:
-                            text = req.status_code
+    def log_exception(self, e, method):
+        self.log(text='[--BEGIN--]')
+        self.log(text=f'Error in [{method}] Request')
+        self.log(text=f'Error Message: {e}')
+        self.log(text='[--END--]')
 
-                        else:
-                            text = colorama.Fore.CYAN + str(req.status_code) + colorama.Fore.RESET
+    def log_result(self, bypass_header, payload, resp, method):
+        self.log('++---------------------------------------++')
+        self.log(f'Payload --> {bypass_header}: {payload}')
+        if not self.is_colorful:
+            _status_code = str(resp.status_code)
+        else:
+            if resp.status_code == 200:
+                _status_code = colorama.Fore.GREEN + str(resp.status_code) + colorama.Fore.RESET
 
-                        self.log(
-                            f'[POST]     Response Length: [{str(len(req.content))}] Status Code: [{text}]')
-                    self.log('++---------------------------------------++')
+            elif resp.status_code == 403:
+                _status_code = resp.status_code
+
+            else:
+                _status_code = colorama.Fore.CYAN + str(resp.status_code) + colorama.Fore.RESET
+
+        self.log(
+            f'[{method}]     Response Length: [{str(len(resp.content))}] Status Code: [{_status_code}]')
+
+        self.log('++---------------------------------------++')
 
     def start(self):
         self.check_timeout()
@@ -283,18 +275,19 @@ Verbose:         {self.all_arguments.verbose}
 
 def print_parser_help():
     help_text = '''Arguments:
-  --url                 -u     Target URL
-  --methods             -m     Methods for Request (Available: GET,POST) [default GET]
-  --use-json            -uj    Use Json Content-Type for POST Request instead of x-www-form-urlencoded
-  --add-payload         -ap    Add Bypass-Value(payload) for Replacing in Headers [default 127.0.0.1]
-  --add-data            -ad    Add Data for Request
-  --add-cookie          -ac    Add Cookie for Request
-  --add-extra-header    -aeh   Add Extra Header for Request
-  --set-proxy           -sp    Set Proxy for Requests [http, https](when proxy is set timeout sets to None)
-  --verbose             -v     Verbose Output
-  --timeout             -t     Timeout in seconds if URL is Using [Default 3.0]
-  --no-color            -nc    Print Output Without Color
-  --show-examples       -se    Show some Examples for Using this Tool
+  --url                       target URL
+  --methods                   methods for request (Available: GET,POST) [default GET]
+  --use-json                  use Json Content-Type for POST Request instead of x-www-form-urlencoded
+  --add-payload               add Bypass-Value(payload) for replacing in headers [default 127.0.0.1]
+  --add-data                  add POST data or GET parameter for Request
+  --add-cookie                add cookie for request
+  --add-extra-header          add extra header for request
+  --set-proxy                 set proxy for requests [http, https](when proxy is set timeout sets to None)
+  --verbose                   verbose output
+  --timeout                   timeout in seconds [Default 3.0]
+  --no-color                  print output without color
+  --show-examples             show some examples for using this tool
+  --help                      show this help message
         '''
 
     print(help_text)
@@ -316,28 +309,28 @@ python3 {prog_name} --url https://www.abc.com/admin --add-extra-header headerNam
 
 def start_parser():
     parser = ArgumentParser(
-        usage='python3 %(prog)s --script-help',
+        usage='python3 %(prog)s --help',
         allow_abbrev=False, add_help=False)
-    parser.add_argument('--script-help', '-sh', action='store_true')
-    parser.add_argument('--url', '-u')
-    parser.add_argument('--methods', '-m', default='get')
-    parser.add_argument('--use-json', '-uj', default=False, action='store_true')
-    parser.add_argument('--add-payload', '-ap', action='append', nargs=1)
-    parser.add_argument('--add-data', '-ad', action='append', nargs=2)
-    parser.add_argument('--add-cookie', '-ac', action='append', nargs=2)
-    parser.add_argument('--add-extra-header', '-aeh', action='append', nargs=2)
-    parser.add_argument('--set-proxy', '-sp', nargs=2)
-    parser.add_argument('--verbose', '-v', default=False, action='store_true')
-    parser.add_argument('--timeout', '-t', default=3.0)
-    parser.add_argument('--no-color', '-nc', default=False, action='store_true')
-    parser.add_argument('--show-examples', '-se', default=False, action='store_true')
+    parser.add_argument('--help', '-h', action='store_true')
+    parser.add_argument('--url')
+    parser.add_argument('--methods', default='get')
+    parser.add_argument('--use-json', default=False, action='store_true')
+    parser.add_argument('--add-payload', action='append', nargs=1)
+    parser.add_argument('--add-data', action='append', nargs=2)
+    parser.add_argument('--add-cookie', action='append', nargs=2)
+    parser.add_argument('--add-extra-header', action='append', nargs=2)
+    parser.add_argument('--set-proxy', nargs=2)
+    parser.add_argument('--verbose', default=False, action='store_true')
+    parser.add_argument('--timeout', default=3.0)
+    parser.add_argument('--no-color', default=False, action='store_true')
+    parser.add_argument('--show-examples', default=False, action='store_true')
 
     args, unknown = parser.parse_known_args()
     if args.show_examples:
         show_examples(prog_name=parser.prog)
         exit()
 
-    if (args.script_help is not None) and (args.script_help is True):
+    if (args.help is not None) and (args.help is True):
         print_parser_help()
         exit()
 
@@ -348,7 +341,7 @@ def start_parser():
     else:
         parser.print_usage()
         print()
-        print('You have to set target ! --> --url')
+        print('You have to set target! --> --url')
         exit()
 
 
