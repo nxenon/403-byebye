@@ -45,3 +45,13 @@ Features:
       --no-color                  print output without color
       --show-examples             show some examples for using this tool
       --help                      show this help message
+
+# Examples
+
+    python3 403-byebye.py --url https://www.abc.com/admin
+    python3 403-byebye.py --url https://www.abc.com/admin --timeout 2.0 --methods GET --set-proxy https 127.0.0.1:8080
+    python3 403-byebye.py --url https://www.abc.com/admin --add-payload 127.0.0.1 --add-payload localhost
+    python3 403-byebye.py --url https://www.abc.com/admin --methods "GET,POST" --use-json --verbose
+    python3 403-byebye.py --url https://www.abc.com/admin --add-data key1 value1 --add-data key2 value2
+    python3 403-byebye.py --url https://www.abc.com/admin --add-cookie cookieName1 value1 --add-cookie cookieName2 value2
+    python3 403-byebye.py --url https://www.abc.com/admin --add-extra-header headerName test --add-extra-header headerName2 test2
